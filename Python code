@@ -1,0 +1,200 @@
+import mysql.connector
+
+# DB CONNECTION
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="S@njay2011",
+    database="ecommerce"
+)
+
+cursor = db.cursor()
+
+# ---------------- USERS ---------------- #
+
+def register():
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+
+    cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)",
+                   (username, password))
+    db.commit()
+    print("Registered successfully!\n")
+
+
+def login():
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+
+    cursor.execute("SELECT * FROM users WHERE username=%s AND password=%s",
+                   (username, password))
+    user = cursor.fetchone()
+
+    if user:
+        print("Login successful!\n")
+        return user[0]  # user_id
+    else:
+        print("Invalid credentials\n")
+        return None
+
+
+# ---------------- PRODUCTS ---------------- #
+
+def view_products():
+    cursor.execute("SELECT * FROM products")
+    products = cursor.fetchall()
+
+    print("\n--- Products ---")
+    print(f"{'ID':<5} {'Name':<25} {'Price':<10} {'Stock':<10}")
+    print("-" * 55)
+
+    for p in products:
+        print(f"{p[0]:<5} {p[1]:<25} ₹{p[2]:<9} {p[3]:<10}")
+    print()
+
+# ---------------- CART ---------------- #
+
+def add_to_cart(user_id):
+    product_id = int(input("Enter product ID: "))
+    quantity = int(input("Enter quantity: "))
+
+    # ❌ Prevent zero or negative quantity
+    if quantity <= 0:
+        print("❌ Quantity must be greater than 0\n")
+        return
+
+    # Check stock
+    cursor.execute("SELECT stock, name FROM products WHERE product_id = %s", (product_id,))
+    result = cursor.fetchone()
+
+    if result:
+        stock, name = result
+
+        if quantity > stock:
+            print(f"❌ Only {stock} items available for '{name}'\n")
+        else:
+            cursor.execute("""
+                INSERT INTO cart (user_id, product_id, quantity)
+                VALUES (%s, %s, %s)
+            """, (user_id, product_id, quantity))
+            db.commit()
+            print("✅ Added to cart!\n")
+    else:
+        print("❌ Product not found\n")
+
+def view_cart(user_id):
+    cursor.execute("""
+        SELECT p.name, p.price, c.quantity
+        FROM cart c
+        JOIN products p ON c.product_id = p.product_id
+        WHERE c.user_id = %s
+    """, (user_id,))
+
+    items = cursor.fetchall()
+
+    print("\n--- Your Cart ---")
+    print(f"{'Product':<25} {'Price':<10} {'Qty':<10} {'Total':<10}")
+    print("-" * 60)
+
+    for item in items:
+        total = item[1] * item[2]
+        print(f"{item[0]:<25} ₹{item[1]:<9} {item[2]:<10} ₹{total:<10}")
+
+    print()
+
+# ---------------- CHECKOUT ---------------- #
+
+def checkout(user_id):
+    cursor.execute("""
+        SELECT p.product_id, p.name, p.price, p.stock, c.quantity
+        FROM cart c
+        JOIN products p ON c.product_id = p.product_id
+        WHERE c.user_id = %s AND c.quantity > 0
+    """, (user_id,))
+
+    items = cursor.fetchall()
+
+    if not items:
+        print("❌ No valid items in cart\n")
+        return
+
+    total = 0
+
+    # ✅ FIRST CHECK ALL STOCK
+    for item in items:
+        product_id, name, price, stock, quantity = item
+
+        if quantity > stock:
+            print(f"❌ Not enough stock for '{name}'. Available: {stock}")
+            return
+
+    # ✅ IF ALL GOOD → PROCEED
+    for item in items:
+        product_id, name, price, stock, quantity = item
+
+        total += price * quantity
+
+        # Reduce stock safely
+
+        # OLD CODE (you must replace this)
+        cursor.execute("""
+            UPDATE products 
+            SET stock = stock - %s 
+            WHERE product_id = %s
+        """, (quantity, product_id))
+        
+
+    cursor.execute("""
+        INSERT INTO orders (user_id, total) VALUES (%s, %s)
+    """, (user_id, total))
+
+    cursor.execute("""
+        DELETE FROM cart WHERE user_id = %s
+    """, (user_id,))
+
+    db.commit()
+
+    print(f"✅ Order placed! Total = ₹{total}\n")
+
+# ---------------- MAIN MENU ---------------- #
+
+def main():
+    while True:
+        print("1. Register")
+        print("2. Login")
+        print("3. Exit")
+
+        choice = input("Enter choice: ")
+
+        if choice == "1":
+            register()
+
+        elif choice == "2":
+            user_id = login()
+
+            if user_id:
+                while True:
+                    print("\n1. View Products")
+                    print("2. Add to Cart")
+                    print("3. View Cart")
+                    print("4. Checkout")
+                    print("5. Logout")
+
+                    ch = input("Enter choice: ")
+
+                    if ch == "1":
+                        view_products()
+                    elif ch == "2":
+                        add_to_cart(user_id)
+                    elif ch == "3":
+                        view_cart(user_id)
+                    elif ch == "4":
+                        checkout(user_id)
+                    elif ch == "5":
+                        break
+
+        elif choice == "3":
+            break
+
+
+main()
