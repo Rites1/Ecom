@@ -1,0 +1,84 @@
+CREATE DATABASE ecommerce;
+USE ecommerce;
+
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50),
+    password VARCHAR(50)
+);
+
+CREATE TABLE products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    price INT,
+    stock INT
+);
+
+CREATE TABLE cart (
+    cart_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    product_id INT,
+    quantity INT
+);
+
+CREATE TABLE orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    total INT
+);
+
+INSERT INTO products (name, price, stock) VALUES
+('Laptop', 55000, 10),
+('Smartphone', 20000, 25),
+('Headphones', 1500, 50),
+('Keyboard', 800, 40),
+('Mouse', 500, 60),
+('Monitor', 12000, 15),
+('Printer', 7000, 10),
+('Tablet', 18000, 20),
+('Smart Watch', 5000, 30),
+('Speaker', 2500, 35),
+
+('USB Cable', 200, 100),
+('Power Bank', 1200, 45),
+('External Hard Disk', 4000, 20),
+('Pendrive 32GB', 600, 70),
+('Pendrive 64GB', 900, 60),
+('Router', 2500, 25),
+('Webcam', 1500, 30),
+('Microphone', 1800, 20),
+('Gaming Chair', 15000, 5),
+('Desk Lamp', 700, 40),
+
+('Office Chair', 6000, 10),
+('Study Table', 8000, 8),
+('Bookshelf', 5000, 12),
+('Fan', 2000, 25),
+('Air Cooler', 9000, 10),
+('Air Conditioner', 35000, 5),
+('Refrigerator', 25000, 6),
+('Washing Machine', 22000, 7),
+('Mixer Grinder', 3000, 15),
+('Electric Kettle', 1200, 30),
+
+('Toaster', 1500, 20),
+('Induction Stove', 2500, 18),
+('Gas Stove', 4000, 12),
+('Water Purifier', 10000, 8),
+('Vacuum Cleaner', 8000, 10),
+('Iron Box', 1200, 25),
+('Hair Dryer', 1000, 35),
+('Trimmer', 1500, 30),
+('Backpack', 2000, 40),
+('Wallet', 800, 50),
+
+('Shoes', 3000, 30),
+('T-Shirt', 700, 60),
+('Jeans', 1500, 45),
+('Jacket', 2500, 20),
+('Cap', 400, 50),
+('Sunglasses', 1200, 35),
+('Watch', 2500, 25),
+('Perfume', 1800, 20),
+('Notebook', 100, 100),
+('Pen Pack', 200, 80);
